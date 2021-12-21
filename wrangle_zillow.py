@@ -1,5 +1,9 @@
 import pandas as pd
 import numpy as np
+from sklearn.model_selection import train_test_split
+import sklearn.preprocessing
+import os
+import env
 
 def prep_zillow_data():
     '''
@@ -40,3 +44,52 @@ def prep_zillow_data():
     df=df.dropna()
     
     return df
+
+
+
+########## Split ##########
+
+# Split the data into train, validate, and test
+def split_data(df, random_state=369, stratify=None):
+    '''
+    This function takes in a dataframe and splits the data into train, validate and test samples. 
+    Test, validate, and train are 20%, 24%, & 56% of the original dataset, respectively. 
+    The function returns train, validate and test dataframes.
+    '''
+   
+    if stratify == None:
+        # split dataframe 80/20
+        train_validate, test = train_test_split(df, test_size=.2, random_state=random_state)
+
+        # split larger dataframe from previous split 70/30
+        train, validate = train_test_split(train_validate, test_size=.3, random_state=random_state)
+    else:
+
+        # split dataframe 80/20
+        train_validate, test = train_test_split(df, test_size=.2, random_state=random_state, stratify=df[stratify])
+
+        # split larger dataframe from previous split 70/30
+        train, validate = train_test_split(train_validate, test_size=.3, 
+                            random_state=random_state,stratify=train_validate[stratify])
+
+    # results in 3 dataframes
+    return train, validate, test
+
+# create function that scales train, validate, and test datasets using min_maxscaler
+def scale_data_min_maxscaler(train, validate, test):
+    '''
+    This function takes in train, validate, and test data sets, scales them using sklearn's Min_MaxScaler
+    and returns three scaled data sets
+    '''
+    # Create the scaler
+    scaler = sklearn.preprocessing.MinMaxScaler(copy=True, feature_range=(0,1))
+
+    # Fit scaler on train dataset
+    scaler.fit(train)
+
+    # Transform and rename columns for all three datasets
+    train_scaled = pd.DataFrame(scaler.transform(train), columns = train.columns.tolist())
+    validate_scaled = pd.DataFrame(scaler.transform(validate), columns = train.columns.tolist())
+    test_scaled = pd.DataFrame(scaler.transform(test), columns = train.columns.tolist())
+
+    return train_scaled, validate_scaled, test_scaled
