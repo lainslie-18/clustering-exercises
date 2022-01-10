@@ -156,3 +156,7 @@ def wrangle_mall_df():
     train, validate = train_test_split(train, train_size = 0.75, random_state = 123)
     
     return min_max_scaler, train, validate, test
+
+
+    
+    # drop null rows for specific columns only
